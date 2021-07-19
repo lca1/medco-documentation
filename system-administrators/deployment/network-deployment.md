@@ -17,6 +17,15 @@ First step is to get the MedCo Deployment latest release at each node. Adapt `${
 ```bash
 export MEDCO_SETUP_DIR=~/medco MEDCO_SETUP_VER=v2.0.1
 git clone --depth 1 --branch ${MEDCO_SETUP_VER} https://github.com/ldsec/medco.git ${MEDCO_SETUP_DIR}
+
+#add ownership rights to current user
+sudo groupadd medco
+sudo groupadd docker
+sudo chown :medco -R "${MEDCO_SETUP_DIR}" # medco group is the owner of the installation directory
+sudo chmod g+wrx "${MEDCO_SETUP_DIR}" -R #add rights to medco group on installation directory
+sudo usermod -aG docker,medco "${USER}" #add current user to docker and medco groups
+sudo systemctl restart docker #restart docker to take group modifications into account
+su ${USER} #relog so that groups modifications are taken into account
 ```
 
 ## Generation of the deployment Profile
@@ -28,7 +37,11 @@ Next the _compose and configuration profiles_ must be generated using a script, 
 
 ### Step 1
 
-For step 1, the network name `${MEDCO_SETUP_NETWORK_NAME}` should be common to all the nodes. `${MEDCO_SETUP_NODE_DNS_NAME}` corresponds to the machine domain name where the node is being deployed. As mentioned before the different parties should have agreed beforehand on the members of the network, and assigned an index `${MEDCO_SETUP_NODE_IDX}` to each different node to construct its UID \(starting from `0`, to `n-1`, `n` being the total number of nodes\).
+For step 1, the network name `${MEDCO_SETUP_NETWORK_NAME}` should be common to all the nodes. `${MEDCO_SETUP_NODE_DNS_NAME}` corresponds to the machine domain name where the node is being deployed. As mentioned before the different parties should have agreed beforehand on the members of the network, and assigned an index `${MEDCO_SETUP_NODE_IDX}` to each different node to construct its UID \(starting from `0`, to `n-1`, `n` being the total number of nodes\). The nodes id's need to contain 3 digits (`0` translates to `000`, `1` to `001`).
+
+{% hint style="warning" %}
+If the following step did not complete correctly, please delete the newly created folder (network-${MEDCO_SETUP_NETWORK_NAME}-${MEDCO_SETUP_NODE_IDX}) before executing `step1.sh` again.
+{% endhint %}
 
 ```bash
 export MEDCO_SETUP_NETWORK_NAME=example \
